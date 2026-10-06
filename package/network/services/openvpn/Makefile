@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openvpn
 
-PKG_VERSION:=2.3.18
-PKG_RELEASE:=1
+PKG_VERSION:=2.6.23
+PKG_RELEASE:=2
 
 PKG_SOURCE_URL:=http://swupdate.openvpn.net/community/releases
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_MD5SUM:=844ec9c64aae62051478784b8562f881
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_MD5SUM:=bf516abde0f0623d7fa649283cb32d7a
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -32,7 +32,7 @@ define Package/openvpn/Default
   URL:=http://openvpn.net
   SUBMENU:=VPN
   MENU:=1
-  DEPENDS:=+kmod-tun +OPENVPN_$(1)_ENABLE_LZO:liblzo +OPENVPN_$(1)_ENABLE_IPROUTE2:ip $(3)
+  DEPENDS:=+libcap +kmod-tun +OPENVPN_$(1)_ENABLE_LZO:liblzo +OPENVPN_$(1)_ENABLE_IPROUTE2:ip $(3) 
   VARIANT:=$(1)
   MAINTAINER:=Mirko Vogt <mirko@openwrt.org>
 endef
@@ -50,7 +50,7 @@ Package/openvpn-polarssl/config=$(call Package/openvpn/config/Default,polarssl)
 Package/openvpn-nossl/config=$(call Package/openvpn/config/Default,nossl)
 
 ifeq ($(BUILD_VARIANT),polarssl)
-CONFIG_OPENVPN_POLARSSL:=y
+CONFIG_OPENVPN_POLARSSL:=n
 endif
 ifeq ($(BUILD_VARIANT),openssl)
 CONFIG_OPENVPN_OPENSSL:=y
@@ -68,11 +68,13 @@ CONFIGURE_VARS += \
 define Build/Configure
 	$(call Build/Configure/Default, \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_SMALL),--enable-small) \
+		--disable-dco \
 		--disable-selinux \
 		--disable-systemd \
 		--disable-plugins \
 		--disable-debug \
 		--disable-pkcs11 \
+		--disable-lz4 \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_LZO),--enable,--disable)-lzo \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_X509_ALT_USERNAME),enable,disable-x509-alt-username)-ssl \
 		$(if $(CONFIG_OPENVPN_$(BUILD_VARIANT)_ENABLE_SERVER),--enable,--disable)-server \
